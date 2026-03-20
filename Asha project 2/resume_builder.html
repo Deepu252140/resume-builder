@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Resume Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&family=Space+Mono&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg: #0D0D0F;
+  --surface: #16161A;
+  --surface2: #1E1E24;
+  --border: #2A2A32;
+  --accent: #00E5A0;
+  --accent2: #5B6EFF;
+  --text: #F0F0F5;
+  --muted: #7A7A8C;
+  --error: #FF5C5C;
+  --sans: 'DM Sans', sans-serif;
+  --display: 'Syne', sans-serif;
+  --mono: 'Space Mono', monospace;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 16px 80px;
+}
+
+/* PROGRESS BAR */
+.progress-wrap {
+  width: 100%;
+  max-width: 680px;
+  margin-bottom: 40px;
+}
+
+.progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.progress-track {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  border-radius: 2px;
+  transition: width 0.5s cubic-bezier(.4,0,.2,1);
+}
+
+.steps-dots {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: center;
+}
+
+.dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.3s;
+}
+
+.dot.active { background: var(--accent); transform: scale(1.3); }
+.dot.done { background: var(--accent2); }
+
+/* CARD */
+.card {
+  width: 100%;
+  max-width: 680px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 40px 44px;
+  animation: slideIn 0.4s cubic-bezier(.4,0,.2,1);
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.step-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.card h2 {
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.card p.desc {
+  font-size: 13.5px;
+  color: var(--muted);
+  margin-bottom: 28px;
+  line-height: 1.6;
+}
+
+/* FORM ELEMENTS */
+.field { margin-bottom: 18px; }
+
+.field label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 7px;
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 14px;
+  padding: 11px 14px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  resize: vertical;
+}
+
+.field input:focus,
+.field textarea:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,229,160,0.1);
+}
+
+.field textarea { min-height: 90px; }
+
+.field input::placeholder,
+.field textarea::placeholder { color: #3A3A48; }
+
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+/* TAGS INPUT */
+.tags-input-wrap {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-height: 48px;
+  cursor: text;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.tags-input-wrap:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,229,160,0.1);
+}
+
+.tag-chip {
+  background: rgba(0,229,160,0.12);
+  border: 1px solid rgba(0,229,160,0.3);
+  color: var(--accent);
+  font-size: 12px;
+  font-family: var(--mono);
+  padding: 3px 10px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tag-chip .remove {
+  cursor: pointer;
+  opacity: 0.6;
+  font-size: 14px;
+  line-height: 1;
+}
+.tag-chip .remove:hover { opacity: 1; color: var(--error); }
+
+.tags-input-wrap input {
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 2px 4px !important;
+  font-size: 13px !important;
+  color: var(--text);
+  width: 120px;
+  flex: 1;
+  min-width: 80px;
+}
+
+.tag-hint {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 5px;
+}
+
+/* PROJECT BLOCK */
+.project-block {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 18px;
+  margin-bottom: 14px;
+  position: relative;
+}
+
+.project-block .block-num {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--accent2);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.add-btn {
+  width: 100%;
+  background: transparent;
+  border: 1.5px dashed var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 13px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 4px;
+}
+.add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.remove-block {
+  position: absolute;
+  top: 12px; right: 14px;
+  background: none;
+  border: none;
+  color: var(--muted);
+  font-size: 18px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.remove-block:hover { color: var(--error); }
+
+/* BUTTONS */
+.btn-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 32px;
+  gap: 12px;
+}
+
+.btn-back {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--muted);
+  font-family: var(--sans);
+  font-size: 14px;
+  font-weight: 500;
+  padding: 11px 24px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-back:hover { border-color: var(--muted); color: var(--text); }
+
+.btn-next {
+  background: var(--accent);
+  border: none;
+  color: #0D0D0F;
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 12px 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.btn-next:hover { background: #00ffb3; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,229,160,0.3); }
+.btn-next:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-generate {
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border: none;
+  color: white;
+  font-family: var(--display);
+  font-size: 15px;
+  font-weight: 700;
+  padding: 13px 36px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.btn-generate:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(91,110,255,0.4); }
+.btn-generate:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+/* LOADING STATE */
+.loading-overlay {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  gap: 20px;
+}
+
+.spinner {
+  width: 48px; height: 48px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-right-color: var(--accent2);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.loading-overlay p {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* RESUME PREVIEW */
+#resume-output {
+  display: none;
+  width: 100%;
+  max-width: 860px;
+  margin-top: 32px;
+  animation: slideIn 0.5s ease;
+}
+
+#resume-output .output-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+#resume-output h3 {
+  font-family: var(--display);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.btn-print {
+  background: var(--surface);
+  border: 1.5px solid var(--accent);
+  color: var(--accent);
+  font-family: var(--mono);
+  font-size: 12px;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-print:hover { background: var(--accent); color: #0D0D0F; }
+
+#resume-frame {
+  width: 100%;
+  min-height: 1100px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: white;
+}
+
+.error-msg {
+  background: rgba(255,92,92,0.1);
+  border: 1px solid rgba(255,92,92,0.3);
+  color: var(--error);
+  font-size: 13px;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-top: 12px;
+  display: none;
+}
+</style>
+</head>
+<body>
+
+<div class="progress-wrap" id="progressWrap">
+  <div class="progress-label">
+    <span id="stepLabel">Step 1 of 5</span>
+    <span id="stepName">Personal Info</span>
+  </div>
+  <div class="progress-track">
+    <div class="progress-fill" id="progressFill" style="width:20%"></div>
+  </div>
+  <div class="steps-dots">
+    <div class="dot active" id="dot0"></div>
+    <div class="dot" id="dot1"></div>
+    <div class="dot" id="dot2"></div>
+    <div class="dot" id="dot3"></div>
+    <div class="dot" id="dot4"></div>
+  </div>
+</div>
+
+<div class="card" id="formCard">
+
+  <!-- STEP 1: PERSONAL INFO -->
+  <div id="step1">
+    <div class="step-badge">Step 01 · Personal</div>
+    <h2>Apni basic info bharo</h2>
+    <p class="desc">Yeh resume ke top pe aayega — recruiter sabse pehle yahi dekhta hai.</p>
+
+    <div class="field">
+      <label>Poora Naam *</label>
+      <input type="text" id="fullName" placeholder="Jaise: Deepu Sharma">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Email *</label>
+        <input type="email" id="email" placeholder="you@gmail.com">
+      </div>
+      <div class="field">
+        <label>Phone *</label>
+        <input type="text" id="phone" placeholder="+91-XXXXX-XXXXX">
+      </div>
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>Location</label>
+        <input type="text" id="location" placeholder="Delhi, India">
+      </div>
+      <div class="field">
+        <label>Job Title / Role *</label>
+        <input type="text" id="jobTitle" placeholder="Frontend Developer Intern">
+      </div>
+    </div>
+    <div class="row3">
+      <div class="field">
+        <label>LinkedIn URL</label>
+        <input type="text" id="linkedin" placeholder="linkedin.com/in/...">
+      </div>
+      <div class="field">
+        <label>GitHub URL</label>
+        <input type="text" id="github" placeholder="github.com/...">
+      </div>
+      <div class="field">
+        <label>Portfolio</label>
+        <input type="text" id="portfolio" placeholder="yoursite.com">
+      </div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-next" onclick="goNext(1)">Next &rarr;</button>
+    </div>
+  </div>
+
+  <!-- STEP 2: SKILLS -->
+  <div id="step2" style="display:none">
+    <div class="step-badge">Step 02 · Skills</div>
+    <h2>Teri skills kya hain?</h2>
+    <p class="desc">Enter karo aur Enter/comma press karo tag banane ke liye.</p>
+
+    <div class="field">
+      <label>Languages</label>
+      <div class="tags-input-wrap" id="langWrap">
+        <input type="text" id="langInput" placeholder="HTML, CSS, JS... phir Enter">
+      </div>
+      <div class="tag-hint">💡 HTML5 · CSS3 · JavaScript · TypeScript</div>
+    </div>
+
+    <div class="field">
+      <label>Frameworks & Libraries</label>
+      <div class="tags-input-wrap" id="fwWrap">
+        <input type="text" id="fwInput" placeholder="React, Next.js, Tailwind...">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Tools & Platforms</label>
+      <div class="tags-input-wrap" id="toolWrap">
+        <input type="text" id="toolInput" placeholder="Git, Figma, VS Code, Vercel...">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Summary (2-3 lines apne baare mein)</label>
+      <textarea id="summary" placeholder="Passionate frontend developer with experience in... (optional — AI bhi likh sakta hai)"></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-back" onclick="goBack(2)">← Back</button>
+      <button class="btn-next" onclick="goNext(2)">Next →</button>
+    </div>
+  </div>
+
+  <!-- STEP 3: PROJECTS -->
+  <div id="step3" style="display:none">
+    <div class="step-badge">Step 03 · Projects</div>
+    <h2>Apne projects batao</h2>
+    <p class="desc">Kam se kam 1 project zaroori hai. Max 4 add kar sakte ho.</p>
+
+    <div id="projectsContainer">
+      <div class="project-block" id="proj0">
+        <div class="block-num">Project 01</div>
+        <div class="field">
+          <label>Project Name *</label>
+          <input type="text" class="proj-name" placeholder="Jaise: Connexy App">
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Tech Stack</label>
+            <input type="text" class="proj-tech" placeholder="React, Node.js, MongoDB...">
+          </div>
+          <div class="field">
+            <label>Duration</label>
+            <input type="text" class="proj-duration" placeholder="Jan 2025 – Present">
+          </div>
+        </div>
+        <div class="field">
+          <label>Description (2-3 points)</label>
+          <textarea class="proj-desc" placeholder="Kya banaya, kya features the, kya achieve kiya..."></textarea>
+        </div>
+        <div class="row2">
+          <div class="field">
+            <label>Live Demo Link</label>
+            <input type="text" class="proj-demo" placeholder="https://...">
+          </div>
+          <div class="field">
+            <label>GitHub Link</label>
+            <input type="text" class="proj-github" placeholder="https://github.com/...">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="add-btn" onclick="addProject()">+ Add Another Project</button>
+
+    <div class="btn-row">
+      <button class="btn-back" onclick="goBack(3)">← Back</button>
+      <button class="btn-next" onclick="goNext(3)">Next →</button>
+    </div>
+  </div>
+
+  <!-- STEP 4: EDUCATION -->
+  <div id="step4" style="display:none">
+    <div class="step-badge">Step 04 · Education</div>
+    <h2>Education & Certifications</h2>
+    <p class="desc">Apni degree aur koi bhi online certificates bharo.</p>
+
+    <div class="field">
+      <label>Degree / Course *</label>
+      <input type="text" id="degree" placeholder="B.Tech — Computer Science">
+    </div>
+    <div class="row2">
+      <div class="field">
+        <label>University / College *</label>
+        <input type="text" id="university" placeholder="Delhi University">
+      </div>
+      <div class="field">
+        <label>Year</label>
+        <input type="text" id="eduYear" placeholder="2022 – 2026">
+      </div>
+    </div>
+    <div class="field">
+      <label>CGPA / Percentage</label>
+      <input type="text" id="cgpa" placeholder="8.5 / 10">
+    </div>
+
+    <div class="field" style="margin-top:20px">
+      <label>Certifications (ek line mein, comma se alag karo)</label>
+      <textarea id="certs" placeholder="Meta Frontend Developer – Coursera 2024, JavaScript Algorithms – freeCodeCamp 2023..."></textarea>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-back" onclick="goBack(4)">← Back</button>
+      <button class="btn-next" onclick="goNext(4)">Next →</button>
+    </div>
+  </div>
+
+  <!-- STEP 5: REVIEW -->
+  <div id="step5" style="display:none">
+    <div class="step-badge">Step 05 · Review</div>
+    <h2>Sab kuch ready hai! 🎉</h2>
+    <p class="desc">AI abhi tera professional resume generate karega. Ek baar check kar lo.</p>
+
+    <div id="reviewBox" style="background:var(--surface2); border:1px solid var(--border); border-radius:10px; padding:20px; font-size:13px; color:var(--muted); line-height:2;"></div>
+
+    <div class="error-msg" id="errorMsg">Kuch galat ho gaya. Dobara try karo.</div>
+
+    <div class="loading-overlay" id="loadingBox">
+      <div class="spinner"></div>
+      <p>AI tera resume likh raha hai...</p>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-back" onclick="goBack(5)">← Back</button>
+      <button class="btn-generate" id="genBtn" onclick="generateResume()">
+        ✦ Generate Resume
+      </button>
+    </div>
+  </div>
+
+</div>
+
+<!-- RESUME OUTPUT -->
+<div id="resume-output">
+  <div class="output-header">
+    <h3>✅ Tera Resume Ready Hai!</h3>
+    <button class="btn-print" onclick="printResume()">🖨 Print / Save PDF</button>
+  </div>
+  <iframe id="resume-frame" frameborder="0"></iframe>
+</div>
+
+<script>
+// ─── TAG INPUT SYSTEM ───
+const tagStores = { lang: [], fw: [], tool: [] };
+
+function setupTagInput(wrapperId, inputId, storeKey) {
+  const wrap = document.getElementById(wrapperId);
+  const input = document.getElementById(inputId);
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault();
+      const val = input.value.trim().replace(/,$/, '');
+      if (val) addTag(val, storeKey, wrap, input);
+    }
+    if (e.key === 'Backspace' && !input.value && tagStores[storeKey].length) {
+      removeTag(tagStores[storeKey].length - 1, storeKey, wrap, input);
+    }
+  });
+  wrap.addEventListener('click', () => input.focus());
+}
+
+function addTag(val, storeKey, wrap, input) {
+  if (tagStores[storeKey].includes(val)) return;
+  tagStores[storeKey].push(val);
+  const chip = document.createElement('div');
+  chip.className = 'tag-chip';
+  chip.dataset.idx = tagStores[storeKey].length - 1;
+  chip.innerHTML = `${val}<span class="remove" onclick="removeTag(${tagStores[storeKey].length - 1},'${storeKey}',null,null)">×</span>`;
+  wrap.insertBefore(chip, input);
+  input.value = '';
+}
+
+function removeTag(idx, storeKey, wrap, input) {
+  tagStores[storeKey].splice(idx, 1);
+  const wrapsMap = { lang: 'langWrap', fw: 'fwWrap', tool: 'toolWrap' };
+  const inputMap = { lang: 'langInput', fw: 'fwInput', tool: 'toolInput' };
+  const w = document.getElementById(wrapsMap[storeKey]);
+  const inp = document.getElementById(inputMap[storeKey]);
+  w.querySelectorAll('.tag-chip').forEach(c => c.remove());
+  tagStores[storeKey].forEach((t, i) => {
+    const chip = document.createElement('div');
+    chip.className = 'tag-chip';
+    chip.innerHTML = `${t}<span class="remove" onclick="removeTag(${i},'${storeKey}',null,null)">×</span>`;
+    w.insertBefore(chip, inp);
+  });
+}
+
+setupTagInput('langWrap', 'langInput', 'lang');
+setupTagInput('fwWrap', 'fwInput', 'fw');
+setupTagInput('toolWrap', 'toolInput', 'tool');
+
+// ─── PROJECTS ───
+let projCount = 1;
+
+function addProject() {
+  if (projCount >= 4) return;
+  const container = document.getElementById('projectsContainer');
+  const div = document.createElement('div');
+  div.className = 'project-block';
+  div.id = `proj${projCount}`;
+  div.innerHTML = `
+    <div class="block-num">Project 0${projCount + 1}</div>
+    <button class="remove-block" onclick="this.parentElement.remove()">×</button>
+    <div class="field"><label>Project Name</label><input type="text" class="proj-name" placeholder="Project ka naam..."></div>
+    <div class="row2">
+      <div class="field"><label>Tech Stack</label><input type="text" class="proj-tech" placeholder="React, Tailwind..."></div>
+      <div class="field"><label>Duration</label><input type="text" class="proj-duration" placeholder="Jan 2025..."></div>
+    </div>
+    <div class="field"><label>Description</label><textarea class="proj-desc" placeholder="Kya banaya..."></textarea></div>
+    <div class="row2">
+      <div class="field"><label>Live Demo</label><input type="text" class="proj-demo" placeholder="https://..."></div>
+      <div class="field"><label>GitHub</label><input type="text" class="proj-github" placeholder="https://github.com/..."></div>
+    </div>`;
+  container.appendChild(div);
+  projCount++;
+}
+
+// ─── STEP NAVIGATION ───
+const stepNames = ['Personal Info', 'Skills', 'Projects', 'Education', 'Review'];
+let currentStep = 1;
+
+function goNext(from) {
+  if (from === 1) {
+    if (!document.getElementById('fullName').value.trim() ||
+        !document.getElementById('email').value.trim() ||
+        !document.getElementById('jobTitle').value.trim()) {
+      alert('Naam, Email aur Job Title zaroori hai!');
+      return;
+    }
+  }
+  if (from === 3) {
+    const names = document.querySelectorAll('.proj-name');
+    if (!names[0].value.trim()) { alert('Kam se kam 1 project ka naam bharo!'); return; }
+  }
+  if (from === 4) {
+    if (!document.getElementById('degree').value.trim() ||
+        !document.getElementById('university').value.trim()) {
+      alert('Degree aur University zaroori hai!'); return;
+    }
+  }
+  showStep(from + 1);
+  if (from + 1 === 5) buildReview();
+}
+
+function goBack(from) { showStep(from - 1); }
+
+function showStep(n) {
+  for (let i = 1; i <= 5; i++) document.getElementById(`step${i}`).style.display = 'none';
+  document.getElementById(`step${n}`).style.display = 'block';
+  currentStep = n;
+
+  const pct = (n / 5) * 100;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('stepLabel').textContent = `Step ${n} of 5`;
+  document.getElementById('stepName').textContent = stepNames[n - 1];
+
+  for (let i = 0; i < 5; i++) {
+    const d = document.getElementById(`dot${i}`);
+    d.className = 'dot' + (i + 1 < n ? ' done' : i + 1 === n ? ' active' : '');
+  }
+}
+
+function buildReview() {
+  const projects = Array.from(document.querySelectorAll('.project-block'))
+    .map(b => b.querySelector('.proj-name').value).filter(Boolean);
+
+  document.getElementById('reviewBox').innerHTML = `
+    <b style="color:var(--text)">👤 ${document.getElementById('fullName').value}</b> — ${document.getElementById('jobTitle').value}<br>
+    📧 ${document.getElementById('email').value} &nbsp; 📞 ${document.getElementById('phone').value}<br>
+    📍 ${document.getElementById('location').value || '—'}<br>
+    <br>
+    <b style="color:var(--text)">🛠 Skills:</b> ${[...tagStores.lang, ...tagStores.fw, ...tagStores.tool].join(', ') || 'Not filled'}<br>
+    <br>
+    <b style="color:var(--text)">📁 Projects:</b> ${projects.join(', ') || 'Not filled'}<br>
+    <br>
+    <b style="color:var(--text)">🎓 Education:</b> ${document.getElementById('degree').value}, ${document.getElementById('university').value}
+  `;
+}
+
+// ─── GENERATE RESUME ───
+async function generateResume() {
+  const btn = document.getElementById('genBtn');
+  const loading = document.getElementById('loadingBox');
+  const errorMsg = document.getElementById('errorMsg');
+  btn.disabled = true;
+  errorMsg.style.display = 'none';
+  loading.style.display = 'flex';
+
+  const projects = Array.from(document.querySelectorAll('.project-block')).map(b => ({
+    name: b.querySelector('.proj-name').value,
+    tech: b.querySelector('.proj-tech').value,
+    duration: b.querySelector('.proj-duration').value,
+    desc: b.querySelector('.proj-desc').value,
+    demo: b.querySelector('.proj-demo').value,
+    github: b.querySelector('.proj-github').value,
+  })).filter(p => p.name);
+
+  const certs = document.getElementById('certs').value.split(',').map(s => s.trim()).filter(Boolean);
+
+  const data = {
+    name: document.getElementById('fullName').value,
+    email: document.getElementById('email').value,
+    phone: document.getElementById('phone').value,
+    location: document.getElementById('location').value,
+    jobTitle: document.getElementById('jobTitle').value,
+    linkedin: document.getElementById('linkedin').value,
+    github: document.getElementById('github').value,
+    portfolio: document.getElementById('portfolio').value,
+    summary: document.getElementById('summary').value,
+    skills: { languages: tagStores.lang, frameworks: tagStores.fw, tools: tagStores.tool },
+    projects,
+    education: {
+      degree: document.getElementById('degree').value,
+      university: document.getElementById('university').value,
+      year: document.getElementById('eduYear').value,
+      cgpa: document.getElementById('cgpa').value,
+    },
+    certifications: certs,
+  };
+
+  const prompt = `You are a professional resume designer. Generate a complete, beautiful, print-ready HTML resume page for the following person. 
+
+Person Data:
+${JSON.stringify(data, null, 2)}
+
+Requirements:
+1. Generate a FULL standalone HTML page (includes DOCTYPE, html, head, body)
+2. Use Google Fonts — import 'DM Sans' and 'Space Mono' from fonts.googleapis.com
+3. Design: clean minimal professional resume — white background, black ink, green (#1B6B4A) as accent color
+4. Add a 5px solid green top border on the page
+5. Sections: Header (name + contact), About/Summary, Skills (3-column grid with tag chips), Projects (with tech badge, bullets from description, links), Education, Certifications
+6. If summary is empty, write a professional 2-line summary based on their role and skills
+7. For project descriptions, expand them into 3 professional bullet points with action verbs and impact
+8. Font sizes: name=28px, section headers=10px uppercase monospace, body=13px
+9. Page width: 794px centered, padding 50px 56px
+10. Make it look like a top-tier internship resume — clean, modern, ATS-friendly
+11. Only output pure HTML — no markdown, no backticks, no explanation
+
+Output ONLY the complete HTML document, nothing else.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const result = await res.json();
+    const html = result.content?.map(c => c.text || '').join('') || '';
+
+    if (!html.includes('<html') && !html.includes('<!DOCTYPE')) throw new Error('Invalid response');
+
+    loading.style.display = 'none';
+    document.getElementById('progressWrap').style.display = 'none';
+    document.getElementById('formCard').style.display = 'none';
+
+    const output = document.getElementById('resume-output');
+    output.style.display = 'block';
+
+    const frame = document.getElementById('resume-frame');
+    frame.srcdoc = html;
+
+  } catch (err) {
+    loading.style.display = 'none';
+    errorMsg.style.display = 'block';
+    btn.disabled = false;
+    console.error(err);
+  }
+}
+
+function printResume() {
+  const frame = document.getElementById('resume-frame');
+  frame.contentWindow.print();
+}
+</script>
+</body>
+</html>
