@@ -1,0 +1,1 @@
+“I built an AI-powered Resume Builder using HTML, CSS, and JavaScript. It features a multi-step form that collects user details and then calls Anthropic’s Claude API to automatically generate a professional resume. I designed the entire frontend myself, including a dark theme, tag input system, progress bar, and overall user experience.”
